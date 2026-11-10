@@ -1,25 +1,46 @@
 "use client";
 
-import React from "react";
+import React , {useEffect} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function LoginPage(){
+    const router = useRouter();
     const [user, setUser] = React.useState({
         email: "",
         password: ""
     });
+    const [buttonDisabled, setButtonDisabled] = React.useState(false);
+    const [loading, setLoading] = React.useState(false);
     const onLogin = async ()=>{
+        try {
+            setLoading(true);
+            const response = await axios.post("/api/users/login", user);
+            toast.success("Login successful!");
+            router.push("/profile");
+        } catch (error) {
+            console.error("Error during login:", error);
+            toast.error("Login failed. Please check your credentials and try again.");
+        } finally {
+            setLoading(false);
+        }
     }
-
+    useEffect(()=>{
+        if(user.email.length>0 && user.password.length>0){
+            setButtonDisabled(false);   
+        }else{
+            setButtonDisabled(true);
+        }
+    }, [user]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#f7f2e8] px-4 py-10">
             <div className="w-full max-w-md rounded-2xl border border-[#e8dfd1] bg-[#fffdf8] p-8 shadow-lg shadow-[#6b543515]">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-[#3d342b]"> Login </h1>
-                    <p className="mt-2 text-[#786e61]"> Sign in to your account </p>
+                    <p className="mt-2 text-[#786e61]"> {loading ? "Logging in..." : "Welcome back!"} </p>
                 </div>
 
                 <div className="mb-5">
@@ -56,7 +77,11 @@ export default function LoginPage(){
                     />
                 </div>
 
-                <button onClick={onLogin} className="w-full rounded-lg bg-[#76583f] py-3 font-semibold text-[#fffdf8] transition duration-200 hover:bg-[#624730]"> Login </button>
+                <button onClick={onLogin}
+                    disabled={buttonDisabled || loading}
+                    className="w-full rounded-lg bg-[#76583f] py-3 font-semibold text-[#fffdf8] transition duration-200 hover:bg-[#624730] disabled:cursor-not-allowed disabled:opacity-50">
+                    {loading ? "Logging in..." : buttonDisabled ? "Please fill all fields" : "Login"}
+                </button>
 
                 <p className="mt-6 text-center text-sm text-[#786e61]">
                     Don't have an account?{" "}
